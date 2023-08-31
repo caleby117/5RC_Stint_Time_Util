@@ -1,0 +1,136 @@
+// 5RC_Stint_Time_Util.cpp : This file contains the 'main' function. Program execution begins and ends there.
+//
+
+#include <iostream>
+#include <unordered_set>
+#include <string>
+#include "irsdk_defines.h"
+
+
+#define SEEK_SET 0
+#pragma warning(disable:4996) //_CRT_SECURE_NO_WARNINGS
+
+/* 
+	Get relevant telemetry information from IBT file for laptime, fuel consumption, weather, tyre wear. 
+*/
+
+struct irsdk_varHeaderWithIndex
+{
+	int index;
+	irsdk_varHeader header;
+};
+
+int main(int argc, char** argv)
+{
+	irsdk_header header;
+	irsdk_diskSubHeader diskHeader;
+
+	// List of variables that we are interested in
+	std::unordered_set<std::string> importantVars = std::unordered_set<std::string>();
+	
+	std::string varStrings[] = {
+		"PlayerCarMyIncidentCount",
+		"PlayerCarWeightPenalty",
+		"PlayerCarPowerAdjust",
+		"LapCompleted",
+		"LapLastLapTime",
+		"TrackTemp",
+		"TrackTempCrew",
+		"AirTemp",
+		"WeatherType",
+		"Skies",
+		"AirDensity",
+		"AirPressure",
+		"WindVel",
+		"FuelLevelPct",
+		"LFwearL",
+		"LFwearM",
+		"LFwearR",
+		"RFwearL",
+		"RFwearM",
+		"RFwearR",
+		"LRwearL",
+		"LRwearM",
+		"LRwearR",
+		"RRwearL",
+		"RRwearM",
+		"RRwearR"
+		};
+
+	for (std::string v : varStrings)
+	{
+		importantVars.insert(v);
+	}
+
+	
+	if (argc < 2)
+	{
+		// no args
+		std::cout << "Usage: 5RC_Stint_Time_Util.exe <ibt file path>" << std::endl;
+		return 1;
+	}
+
+	// open the file for reading
+	FILE* ibt = fopen(argv[1], "rb");
+	irsdk_varHeader importantVarHeaders[26];
+
+
+	if (ibt)
+	{
+		// file opened successfully
+		// read header length and read header
+		int len = sizeof(irsdk_header);
+		if (len == fread(&header, 1, len, ibt))
+		{
+			// successfully read header
+			// read disk header length and header
+			len = sizeof(irsdk_diskSubHeader);
+			if (len == fread(&diskHeader, 1, len, ibt))
+			{
+				// successfully read disk header
+				// varheaders: length header.numVars, offset to this part: header.varHeaderOffset
+
+				// Get the headers that we are interested in 
+				// linear search through until we populate the vars list
+				int currHeaderOffset = 0;
+				
+				// length of the list of variables
+				len = sizeof(irsdk_varHeader);
+				irsdk_varHeader curVar;
+				fseek(ibt, header.varHeaderOffset, 0);
+				for (int i = 0; i < header.numVars; i++)
+				{
+					if (len == fread(&curVar, 1, len, ibt))
+					{
+						// Read into curVar. 
+						if (importantVars.contains(curVar.name))
+						{
+							// Found the var that we are interested in 
+							importantVarHeaders[currHeaderOffset++] = curVar;
+							importantVars.erase(curVar.name);
+						}
+					}
+				}
+
+				for (int i = 0; i < importantVarsSize; i++)
+				{
+					std::cout << importantVarHeaders[i].name << std::endl;
+				}
+
+			}
+		}
+		fclose(ibt);
+	}
+
+}
+
+// Run program: Ctrl + F5 or Debug > Start Without Debugging menu
+// Debug program: F5 or Debug > Start Debugging menu
+
+// Tips for Getting Started: 
+//   1. Use the Solution Explorer window to add/manage files
+//   2. Use the Team Explorer window to connect to source control
+//   3. Use the Output window to see build output and other messages
+//   4. Use the Error List window to view errors
+//   5. Go to Project > Add New Item to create new code files, or Project > Add Existing Item to add existing code files to the project
+//   6. In the future, to open this project again, go to File > Open > Project and select the .sln file
