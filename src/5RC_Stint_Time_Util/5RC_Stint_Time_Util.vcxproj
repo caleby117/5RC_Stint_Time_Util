@@ -133,6 +133,9 @@
   <ItemGroup>
     <ClCompile Include="5RC_Stint_Time_Util.cpp" />
   </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="irsdk_defines.h" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

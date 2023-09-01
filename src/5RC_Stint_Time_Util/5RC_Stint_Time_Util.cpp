@@ -6,7 +6,7 @@
 #include <string>
 #include "irsdk_defines.h"
 
-
+#define DUMP_TO_STDOUT
 #define SEEK_SET 0
 #pragma warning(disable:4996) //_CRT_SECURE_NO_WARNINGS
 
@@ -27,71 +27,95 @@ union irPossibleTypes
 static irsdk_header header;
 static irsdk_diskSubHeader diskHeader;
 
-void GetFirstSamplesOfLaps(int *firstSamplesOfLaps, irsdk_varHeader &lastLapTime, FILE* ibt)
+std::string varStrings[] = {
+	"SessionTick",
+	"PlayerCarPosition",
+	"PlayerCarClassPosition",
+	"PlayerCarClass",
+	"PlayerCarTeamIncidentCount",
+	"PlayerCarMyIncidentCount",
+	"PlayerCarWeightPenalty",
+	"PlayerCarPowerAdjust",
+	"Lap",
+	"LapLastLapTime",
+	"TrackTemp",
+	"TrackTempCrew",
+	"AirTemp",
+	"WeatherType",
+	"Skies",
+	"AirDensity",
+	"AirPressure",
+	"WindVel",
+	"FuelLevelPct",
+	"LFwearL",
+	"LFwearM",
+	"LFwearR",
+	"RFwearL",
+	"RFwearM",
+	"RFwearR",
+	"LRwearL",
+	"LRwearM",
+	"LRwearR",
+	"RRwearL",
+	"RRwearM",
+	"RRwearR"
+	};
+
+int GetDataOffset()
+{
+	int curLatest = 0;
+	// get the latest varBuf
+	for (int i = 1; i < header.numBuf; i++)
+	{
+		if (header.varBuf[i].tickCount > header.varBuf[curLatest].tickCount)
+			curLatest = i;
+	}
+	return header.varBuf[curLatest].bufOffset;
+}
+
+
+
+void ReadFirstSamplesOfLaps(int *firstSamplesOfLaps, irsdk_varHeader &lastLapTime, FILE* ibt)
 {
 	int idx = 0;
-	int len = sizeof(float);
-	float curr;
-	float prev = -INFINITY;
-	int dataStart = header.sessionInfoLen + header.sessionInfoOffset;
+	int len = irsdk_VarTypeBytes[lastLapTime.type];
+	float currLastLapTime;
+	float prevLastLapTime = -INFINITY;
+
+	// ignore first lap/entry
+	int dataStart = GetDataOffset() + header.bufLen;
+	bool ignore = true;
+	
 	fseek(ibt, dataStart+lastLapTime.offset, SEEK_SET);
-	int count = 0;
-	while (len == fread(&curr, 1, irsdk_float, ibt))
+	int count = 1;
+	while (len == fread(&currLastLapTime, 1, irsdk_float, ibt))
 	{
-		if (curr != prev)
+		if (currLastLapTime != prevLastLapTime)
 		{
+			std::cout << currLastLapTime << ", " << prevLastLapTime << std::endl;
+			if (ignore)
+			{
+				ignore = false;
+				prevLastLapTime = currLastLapTime;
+				fseek(ibt, header.bufLen-len, SEEK_CUR);
+				count++;
+				continue;
+			}
 			firstSamplesOfLaps[idx++] = count;
 			std::cout << "Sample of new lap: " << count << std::endl;
 		}
-		prev = curr;
-		fseek(ibt, header.bufLen-sizeof(int), SEEK_CUR);
+		prevLastLapTime = currLastLapTime;
+		fseek(ibt, header.bufLen-len, SEEK_CUR);
 		count++;
 	}
 
 }
 
 
+
+
 int main(int argc, char** argv)
 {
-
-	// List of variables that we are interested in
-	std::unordered_set<std::string> importantVars = std::unordered_set<std::string>();
-	
-	std::string varStrings[] = {
-		"PlayerCarMyIncidentCount",
-		"PlayerCarWeightPenalty",
-		"PlayerCarPowerAdjust",
-		"LapCompleted",
-		"LapLastLapTime",
-		"TrackTemp",
-		"TrackTempCrew",
-		"AirTemp",
-		"WeatherType",
-		"Skies",
-		"AirDensity",
-		"AirPressure",
-		"WindVel",
-		"FuelLevelPct",
-		"LFwearL",
-		"LFwearM",
-		"LFwearR",
-		"RFwearL",
-		"RFwearM",
-		"RFwearR",
-		"LRwearL",
-		"LRwearM",
-		"LRwearR",
-		"RRwearL",
-		"RRwearM",
-		"RRwearR"
-		};
-
-	for (std::string v : varStrings)
-	{
-		importantVars.insert(v);
-	}
-
-	
 	if (argc < 2)
 	{
 		// no args
@@ -99,11 +123,21 @@ int main(int argc, char** argv)
 		return 1;
 	}
 
+	// List of variables that we are interested in
+	std::unordered_set<std::string> importantVars = std::unordered_set<std::string>();
+	
+
+	for (std::string v : varStrings)
+	{
+		importantVars.insert(v);
+	}
+
+	
+
 	// open the file for reading
 	FILE* ibt = fopen(argv[1], "rb");
-	const int importantVarsSize = 26;
-	irsdk_varHeader importantVarHeaders[importantVarsSize];
-	std::byte* samples;
+	const int importantVarsSize = importantVars.size();
+	irsdk_varHeader* importantVarHeaders = new irsdk_varHeader[importantVarsSize];
 	int sampleRowLength;
 
 
@@ -126,7 +160,6 @@ int main(int argc, char** argv)
 				// linear search through until we populate the vars list
 				int currHeaderOffset = 0;
 				
-				// length of the list of variables
 				len = sizeof(irsdk_varHeader);
 				irsdk_varHeader curVar;
 				fseek(ibt, header.varHeaderOffset, SEEK_SET);
@@ -148,49 +181,57 @@ int main(int argc, char** argv)
 					}
 				}
 
+#ifdef DUMP_TO_STDOUT
 				for (int i = 0; i < importantVarsSize; i++)
 				{
 					std::cout << importantVarHeaders[i].name << " - " << importantVarHeaders[i].count << std::endl;
 				}
+#endif
 
 				// Read all the vars that we are interested in. Grab the variables that we are interested in 
 				// Laptime comes in only after about 5 ticks 
 
 				// set up a new row of data only for the vars that we are interested in 
 				int newRowSize = 0;
-				for (irsdk_varHeader& h : importantVarHeaders)
+				for (int i = 0; i < importantVarsSize; i++)
 				{
+					irsdk_varHeader& h = importantVarHeaders[i];
 					newRowSize += irsdk_VarTypeBytes[h.type];
 				}
 
 
-				// Compare the LastLap time between samples, get samples that are at the start of a new lap
+				// Get the sample indices of "first" sample of every new lap
+				// ** var LapLastLapTime only updates about 10 ticks after crossing the line, take first sample when this variable updates.
 				int* firstSampleRowOfLap = new int[diskHeader.sessionLapCount];
-				GetFirstSamplesOfLaps(firstSampleRowOfLap, importantVarHeaders[lastLapTimeidx], ibt);
+				ReadFirstSamplesOfLaps(firstSampleRowOfLap, importantVarHeaders[lastLapTimeidx], ibt);
 				sampleRowLength = diskHeader.sessionLapCount * newRowSize;
-				samples = new std::byte[sampleRowLength];
-				int start = header.sessionInfoLen + header.sessionInfoOffset;
+				std::byte* samples = new std::byte[sampleRowLength];
+
+				// Get the data from the selected samples
+				int start = GetDataOffset();
 				int curPosBuffer = 0;
 				for (int lap = 0; lap < diskHeader.sessionLapCount; lap++)
 				{
 					int startOfCurrentRow = start + (header.bufLen * firstSampleRowOfLap[lap]);
 	
-					for (irsdk_varHeader& vHeader : importantVarHeaders)
+					for (int i = 0; i < importantVarsSize; i++)
 					{
+						irsdk_varHeader& vHeader = importantVarHeaders[i];
 						fseek(ibt, startOfCurrentRow+vHeader.offset, SEEK_SET);
 						fread(&samples[curPosBuffer], irsdk_VarTypeBytes[vHeader.type], 1, ibt);
 						curPosBuffer += irsdk_VarTypeBytes[vHeader.type];
 					}
 				}
 
-
+#ifdef DUMP_TO_STDOUT
 				// for testing and verification
 				curPosBuffer = 0;
 				for (int i = 0; i < diskHeader.sessionLapCount; i++)
 				{
-					std::cout << "\n\n Lap " << i << std::endl;
-					for (irsdk_varHeader& vHeader : importantVarHeaders)
+					std::cout << "\n\nLap " << i << std::endl;
+					for (int j = 0; j < importantVarsSize; j++)
 					{
+						irsdk_varHeader& vHeader = importantVarHeaders[j];
 						irPossibleTypes currentType;
 						std::cout << vHeader.name << ": ";
 						switch (vHeader.type)
@@ -206,33 +247,40 @@ int main(int argc, char** argv)
 							break;
 
 						case irsdk_int:
-							std::memcpy(&currentType.intValue, &samples[curPosBuffer], irsdk_VarTypeBytes[irsdk_int]);
+							std::memcpy(&currentType.intValue, &samples[curPosBuffer], irsdk_VarTypeBytes[vHeader.type]);
 							std::cout << currentType.intValue << std::endl;
 							break;
 
 						case irsdk_bitField:
-							std::memcpy(&currentType.intValue, &samples[curPosBuffer], irsdk_VarTypeBytes[irsdk_bitField]);
+							std::memcpy(&currentType.intValue, &samples[curPosBuffer], irsdk_VarTypeBytes[vHeader.type]);
 							std::cout << std::hex << currentType.intValue << std::endl;
 							break;
 
 						case irsdk_float:
-							std::memcpy(&currentType.floatValue, &samples[curPosBuffer], irsdk_VarTypeBytes[irsdk_float]);
+							std::memcpy(&currentType.floatValue, &samples[curPosBuffer], irsdk_VarTypeBytes[vHeader.type]);
 							std::cout << currentType.floatValue << std::endl;
 							break;
 
 						case irsdk_double:
-							std::memcpy(&currentType.doubleValue, &samples[curPosBuffer], irsdk_VarTypeBytes[irsdk_double]);
+							std::memcpy(&currentType.doubleValue, &samples[curPosBuffer], irsdk_VarTypeBytes[vHeader.type]);
 							std::cout << currentType.doubleValue << std::endl;
 							break;
 						}
 
 						curPosBuffer += irsdk_VarTypeBytes[vHeader.type];
 					}
+					
 				}
+#endif
+				delete[] samples;
+				delete[] firstSampleRowOfLap;
+				
 			}
 		}
 		fclose(ibt);
 	}
+
+	delete[] importantVarHeaders;
 
 }
 
