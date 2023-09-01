@@ -429,3 +429,6 @@ FodyWeavers.xsd
 
 # JetBrains Rider
 *.sln.iml
+
+# Some weird cached form of the cpp file
+2
