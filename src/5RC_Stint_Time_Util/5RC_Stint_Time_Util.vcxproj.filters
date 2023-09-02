@@ -18,9 +18,15 @@
     <ClCompile Include="5RC_Stint_Time_Util.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="StintVars.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="irsdk_defines.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="StintVars.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
