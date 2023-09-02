@@ -136,9 +136,9 @@ int main(int argc, char** argv)
 
 	// open the file for reading
 	FILE* ibt = fopen(argv[1], "rb");
-	const int stintVarsSize = stintVars.size();
-	irsdk_varHeader* stintVarHeaders = new irsdk_varHeader[stintVarsSize];
-	int sampleRowLength;
+	const int stintVarsCount = stintVars.size();
+	irsdk_varHeader* irStintVarHeaders = new irsdk_varHeader[stintVarsCount];
+	StintVarHeaderData sVarData = StintVarHeaderData();
 
 
 	if (ibt)
@@ -158,12 +158,11 @@ int main(int argc, char** argv)
 
 				// Get the headers that we are interested in 
 				// linear search through until we populate the vars list
-				int currHeaderOffset = 0;
+				int currHeaderIdx = 0;
 				
 				len = sizeof(irsdk_varHeader);
 				irsdk_varHeader curVar;
 				fseek(ibt, header.varHeaderOffset, SEEK_SET);
-				int lastLapTimeidx;
 				for (int i = 0; i < header.numVars; i++)
 				{
 					if (len == fread(&curVar, 1, len, ibt))
@@ -172,9 +171,7 @@ int main(int argc, char** argv)
 						if (stintVars.contains(curVar.name))
 						{
 							// Found the var that we are interested in 
-							stintVarHeaders[currHeaderOffset] = curVar;
-							if (strcmp(curVar.name, "LapLastLapTime") == 0 ) lastLapTimeidx = currHeaderOffset;
-							currHeaderOffset++;
+							irStintVarHeaders[currHeaderIdx++] = curVar;
 							stintVars.erase(curVar.name);
 							if (stintVars.empty()) break;
 						}
@@ -182,9 +179,9 @@ int main(int argc, char** argv)
 				}
 
 #ifdef DUMP_TO_STDOUT
-				for (int i = 0; i < stintVarsSize; i++)
+				for (int i = 0; i < stintVarsCount; i++)
 				{
-					std::cout << stintVarHeaders[i].name << " - " << stintVarHeaders[i].count << std::endl;
+					std::cout << irStintVarHeaders[i].name << " - " << irStintVarHeaders[i].count << std::endl;
 				}
 #endif
 
@@ -192,20 +189,15 @@ int main(int argc, char** argv)
 				// Laptime comes in only after about 5 ticks 
 
 				// set up a new row of data only for the vars that we are interested in 
-				int newRowSize = 0;
-				for (int i = 0; i < stintVarsSize; i++)
-				{
-					irsdk_varHeader& h = stintVarHeaders[i];
-					newRowSize += irsdk_VarTypeBytes[h.type];
-				}
-
+				sVarData.registerVars(irStintVarHeaders, stintVarsCount);
+				
 
 				// Get the sample indices of "first" sample of every new lap
 				// ** var LapLastLapTime only updates about 10 ticks after crossing the line, take first sample when this variable updates.
 				int* firstSampleRowOfLap = new int[diskHeader.sessionLapCount];
-				ReadFirstSamplesOfLaps(firstSampleRowOfLap, stintVarHeaders[lastLapTimeidx], ibt);
-				sampleRowLength = diskHeader.sessionLapCount * newRowSize;
-				std::byte* samples = new std::byte[sampleRowLength];
+				int lastLapTime_i = sVarData.getStintVarHeaderIdx("LapLastLapTime");
+				ReadFirstSamplesOfLaps(firstSampleRowOfLap, irStintVarHeaders[lastLapTime_i], ibt);
+				std::byte* samples = new std::byte[diskHeader.sessionLapCount * sVarData.getSampleLen()];
 
 				// Get the data from the selected samples
 				int start = GetDataOffset();
@@ -214,9 +206,9 @@ int main(int argc, char** argv)
 				{
 					int startOfCurrentRow = start + (header.bufLen * firstSampleRowOfLap[lap]);
 	
-					for (int i = 0; i < stintVarsSize; i++)
+					for (int i = 0; i < stintVarsCount; i++)
 					{
-						irsdk_varHeader& vHeader = stintVarHeaders[i];
+						irsdk_varHeader& vHeader = irStintVarHeaders[i];
 						fseek(ibt, startOfCurrentRow+vHeader.offset, SEEK_SET);
 						fread(&samples[curPosBuffer], irsdk_VarTypeBytes[vHeader.type], 1, ibt);
 						curPosBuffer += irsdk_VarTypeBytes[vHeader.type];
@@ -231,9 +223,9 @@ int main(int argc, char** argv)
 				for (int i = 0; i < diskHeader.sessionLapCount; i++)
 				{
 					std::cout << "\n\nLap " << i << std::endl;
-					for (int j = 0; j < stintVarsSize; j++)
+					for (int j = 0; j < stintVarsCount; j++)
 					{
-						irsdk_varHeader& vHeader = stintVarHeaders[j];
+						irsdk_varHeader& vHeader = irStintVarHeaders[j];
 						irPossibleTypes currentType;
 						std::cout << vHeader.name << ": ";
 						switch (vHeader.type)
@@ -274,6 +266,10 @@ int main(int argc, char** argv)
 					
 				}
 #endif
+
+				// Remove laps at the end with jumbled data
+				
+
 				delete[] samples;
 				delete[] firstSampleRowOfLap;
 				
@@ -282,7 +278,7 @@ int main(int argc, char** argv)
 		fclose(ibt);
 	}
 
-	delete[] stintVarHeaders;
+	delete[] irStintVarHeaders;
 
 }
 

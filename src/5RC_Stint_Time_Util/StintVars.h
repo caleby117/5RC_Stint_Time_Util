@@ -19,11 +19,10 @@ struct StintVarHeader
 class StintVarHeaderData
 {
 public:
-	StintVarHeaderData();
 
 	// ??? 
 	void registerVars(irsdk_varHeader* vars, int count);
-	int getStintVarHeaderIdx(const char* var);
+	int getStintVarHeaderIdx(std::string var);
 	int getVarCount();
 	StintVarHeader& getStintVarHeader(const char* var);
 	int getSampleLen();
@@ -33,7 +32,7 @@ protected:
 	irsdk_varHeader* irVarHeaderArr;
 	int varCount = 0;
 	int registeredVars = 0;
-	std::unordered_map<const char*, int> stintVarIndexByName;
+	std::unordered_map < std::string, int > stintVarIndexByName;
 	StintVarHeader* stintVarHeaders = NULL;
 	size_t sampleLen;
 	
