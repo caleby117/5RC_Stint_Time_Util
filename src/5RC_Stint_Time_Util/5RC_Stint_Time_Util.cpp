@@ -5,9 +5,9 @@
 #include <unordered_set>
 #include <string>
 #include "irsdk_defines.h"
+#include "StintVars.h"
 
 #define DUMP_TO_STDOUT
-#define SEEK_SET 0
 #pragma warning(disable:4996) //_CRT_SECURE_NO_WARNINGS
 
 /* 
@@ -124,20 +124,20 @@ int main(int argc, char** argv)
 	}
 
 	// List of variables that we are interested in
-	std::unordered_set<std::string> importantVars = std::unordered_set<std::string>();
+	std::unordered_set<std::string> stintVars = std::unordered_set<std::string>();
 	
 
 	for (std::string v : varStrings)
 	{
-		importantVars.insert(v);
+		stintVars.insert(v);
 	}
 
 	
 
 	// open the file for reading
 	FILE* ibt = fopen(argv[1], "rb");
-	const int importantVarsSize = importantVars.size();
-	irsdk_varHeader* importantVarHeaders = new irsdk_varHeader[importantVarsSize];
+	const int stintVarsSize = stintVars.size();
+	irsdk_varHeader* stintVarHeaders = new irsdk_varHeader[stintVarsSize];
 	int sampleRowLength;
 
 
@@ -169,22 +169,22 @@ int main(int argc, char** argv)
 					if (len == fread(&curVar, 1, len, ibt))
 					{
 						// Read into curVar. 
-						if (importantVars.contains(curVar.name))
+						if (stintVars.contains(curVar.name))
 						{
 							// Found the var that we are interested in 
-							importantVarHeaders[currHeaderOffset] = curVar;
+							stintVarHeaders[currHeaderOffset] = curVar;
 							if (strcmp(curVar.name, "LapLastLapTime") == 0 ) lastLapTimeidx = currHeaderOffset;
 							currHeaderOffset++;
-							importantVars.erase(curVar.name);
-							if (importantVars.empty()) break;
+							stintVars.erase(curVar.name);
+							if (stintVars.empty()) break;
 						}
 					}
 				}
 
 #ifdef DUMP_TO_STDOUT
-				for (int i = 0; i < importantVarsSize; i++)
+				for (int i = 0; i < stintVarsSize; i++)
 				{
-					std::cout << importantVarHeaders[i].name << " - " << importantVarHeaders[i].count << std::endl;
+					std::cout << stintVarHeaders[i].name << " - " << stintVarHeaders[i].count << std::endl;
 				}
 #endif
 
@@ -193,9 +193,9 @@ int main(int argc, char** argv)
 
 				// set up a new row of data only for the vars that we are interested in 
 				int newRowSize = 0;
-				for (int i = 0; i < importantVarsSize; i++)
+				for (int i = 0; i < stintVarsSize; i++)
 				{
-					irsdk_varHeader& h = importantVarHeaders[i];
+					irsdk_varHeader& h = stintVarHeaders[i];
 					newRowSize += irsdk_VarTypeBytes[h.type];
 				}
 
@@ -203,7 +203,7 @@ int main(int argc, char** argv)
 				// Get the sample indices of "first" sample of every new lap
 				// ** var LapLastLapTime only updates about 10 ticks after crossing the line, take first sample when this variable updates.
 				int* firstSampleRowOfLap = new int[diskHeader.sessionLapCount];
-				ReadFirstSamplesOfLaps(firstSampleRowOfLap, importantVarHeaders[lastLapTimeidx], ibt);
+				ReadFirstSamplesOfLaps(firstSampleRowOfLap, stintVarHeaders[lastLapTimeidx], ibt);
 				sampleRowLength = diskHeader.sessionLapCount * newRowSize;
 				std::byte* samples = new std::byte[sampleRowLength];
 
@@ -214,14 +214,16 @@ int main(int argc, char** argv)
 				{
 					int startOfCurrentRow = start + (header.bufLen * firstSampleRowOfLap[lap]);
 	
-					for (int i = 0; i < importantVarsSize; i++)
+					for (int i = 0; i < stintVarsSize; i++)
 					{
-						irsdk_varHeader& vHeader = importantVarHeaders[i];
+						irsdk_varHeader& vHeader = stintVarHeaders[i];
 						fseek(ibt, startOfCurrentRow+vHeader.offset, SEEK_SET);
 						fread(&samples[curPosBuffer], irsdk_VarTypeBytes[vHeader.type], 1, ibt);
 						curPosBuffer += irsdk_VarTypeBytes[vHeader.type];
 					}
 				}
+
+				// TODO: Create a class to hold information about each variable in this new data row etc.
 
 #ifdef DUMP_TO_STDOUT
 				// for testing and verification
@@ -229,9 +231,9 @@ int main(int argc, char** argv)
 				for (int i = 0; i < diskHeader.sessionLapCount; i++)
 				{
 					std::cout << "\n\nLap " << i << std::endl;
-					for (int j = 0; j < importantVarsSize; j++)
+					for (int j = 0; j < stintVarsSize; j++)
 					{
-						irsdk_varHeader& vHeader = importantVarHeaders[j];
+						irsdk_varHeader& vHeader = stintVarHeaders[j];
 						irPossibleTypes currentType;
 						std::cout << vHeader.name << ": ";
 						switch (vHeader.type)
@@ -280,7 +282,7 @@ int main(int argc, char** argv)
 		fclose(ibt);
 	}
 
-	delete[] importantVarHeaders;
+	delete[] stintVarHeaders;
 
 }
 
