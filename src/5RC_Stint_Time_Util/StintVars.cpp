@@ -65,3 +65,7 @@ StintVarHeader& StintVarHeaderData::getStintVarHeader(const char* var)
 
 
 int StintVarHeaderData::getSampleLen() { return sampleLen; }
+
+void StintVarHeaderData::setValidLaps(int laps) { validLaps = laps; }
+
+int StintVarHeaderData::getValidLaps() { return validLaps; }

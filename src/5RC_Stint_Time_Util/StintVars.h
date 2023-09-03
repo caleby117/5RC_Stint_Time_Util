@@ -20,12 +20,13 @@ class StintVarHeaderData
 {
 public:
 
-	// ??? 
 	void registerVars(irsdk_varHeader* vars, int count);
 	int getStintVarHeaderIdx(std::string var);
 	int getVarCount();
 	StintVarHeader& getStintVarHeader(const char* var);
 	int getSampleLen();
+	void setValidLaps(int laps);
+	int getValidLaps();
 
 protected:
 	void registerVar(irsdk_varHeader& var, int idx, int offset);
@@ -35,6 +36,7 @@ protected:
 	std::unordered_map < std::string, int > stintVarIndexByName;
 	StintVarHeader* stintVarHeaders = NULL;
 	size_t sampleLen;
+	int validLaps = -1;
 	
 };
 

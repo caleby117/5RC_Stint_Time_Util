@@ -94,7 +94,6 @@ void ReadFirstSamplesOfLaps(int *firstSamplesOfLaps, irsdk_varHeader &lastLapTim
 	{
 		if (currLastLapTime != prevLastLapTime)
 		{
-			std::cout << currLastLapTime << ", " << prevLastLapTime << std::endl;
 			if (ignore)
 			{
 				ignore = false;
@@ -104,7 +103,9 @@ void ReadFirstSamplesOfLaps(int *firstSamplesOfLaps, irsdk_varHeader &lastLapTim
 				continue;
 			}
 			firstSamplesOfLaps[idx++] = count;
-			std::cout << "Sample of new lap: " << count << std::endl;
+#ifdef DUMP_TO_STDOUT
+			std::cout << "Sample number of new lap: " << count << std::endl;
+#endif
 		}
 		prevLastLapTime = currLastLapTime;
 		fseek(ibt, header.bufLen-len, SEEK_CUR);
@@ -217,7 +218,7 @@ int main(int argc, char** argv)
 					}
 				}
 
-				// TODO: Create a class to hold information about each variable in this new data row etc.
+				
 
 #ifdef DUMP_TO_STDOUT
 				// for testing and verification
@@ -269,8 +270,22 @@ int main(int argc, char** argv)
 				}
 #endif
 
+				int lapOffset = sVarData.getStintVarHeader("Lap").offset;
+				int curLap;
+				int prevLap = -1;
 				// Remove laps at the end with jumbled data
-				
+				for (int lap = 0; lap < diskHeader.sessionLapCount; lap++)
+				{
+					// some hopefully not too jank pointer arithmetic
+					curLap = *((int*)(samples + (sVarData.getSampleLen() * lap) + lapOffset));
+					if (lap > 0 && (curLap-prevLap != 1))
+					{
+						// Probably reached the uninitialised part of the array. Don't consider anything after this
+						sVarData.setValidLaps(lap);
+						break;
+					}
+					prevLap = curLap;
+				}
 
 				delete[] samples;
 				delete[] firstSampleRowOfLap;
