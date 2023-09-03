@@ -89,6 +89,10 @@ static const _TCHAR IRSDK_MEMMAPFILENAME[]     = _T("Local\\IRSDKMemMapFileName"
 static const _TCHAR IRSDK_BROADCASTMSGNAME[]   = _T("IRSDK_BROADCASTMSG");
 #endif
 
+#ifdef __linux__
+#include <cstring>
+#endif
+
 
 static const int IRSDK_MAX_BUFS = 4;
 static const int IRSDK_MAX_STRING = 32;

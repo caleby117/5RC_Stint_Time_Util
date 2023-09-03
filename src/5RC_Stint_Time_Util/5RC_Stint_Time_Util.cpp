@@ -10,6 +10,12 @@
 #define DUMP_TO_STDOUT
 #ifdef _WIN32
 #pragma warning(disable:4996) //_CRT_SECURE_NO_WARNINGS
+#define byte std::byte
+#endif
+
+
+#ifdef __linux__
+#include <cstring>
 #endif
 
 /* 
@@ -171,7 +177,7 @@ int main(int argc, char** argv)
 					if (len == fread(&curVar, 1, len, ibt))
 					{
 						// Read into curVar. 
-						if (stintVars.contains(curVar.name))
+						if (stintVars.find(curVar.name) != stintVars.end())
 						{
 							// Found the var that we are interested in 
 							irStintVarHeaders[currHeaderIdx++] = curVar;
@@ -200,7 +206,7 @@ int main(int argc, char** argv)
 				int* firstSampleRowOfLap = new int[diskHeader.sessionLapCount];
 				int lastLapTime_i = sVarData.getStintVarHeaderIdx("LapLastLapTime");
 				ReadFirstSamplesOfLaps(firstSampleRowOfLap, irStintVarHeaders[lastLapTime_i], ibt);
-				std::byte* samples = new std::byte[diskHeader.sessionLapCount * sVarData.getSampleLen()];
+				byte* samples = new byte[diskHeader.sessionLapCount * sVarData.getSampleLen()];
 
 				// Get the data from the selected samples
 				int start = GetDataOffset();
@@ -244,22 +250,22 @@ int main(int argc, char** argv)
 							break;
 
 						case irsdk_int:
-							std::memcpy(&currentType.intValue, &samples[curPosBuffer], irsdk_VarTypeBytes[vHeader.type]);
+							memcpy(&currentType.intValue, &samples[curPosBuffer], irsdk_VarTypeBytes[vHeader.type]);
 							std::cout << currentType.intValue << std::endl;
 							break;
 
 						case irsdk_bitField:
-							std::memcpy(&currentType.intValue, &samples[curPosBuffer], irsdk_VarTypeBytes[vHeader.type]);
+							memcpy(&currentType.intValue, &samples[curPosBuffer], irsdk_VarTypeBytes[vHeader.type]);
 							std::cout << std::hex << currentType.intValue << std::endl;
 							break;
 
 						case irsdk_float:
-							std::memcpy(&currentType.floatValue, &samples[curPosBuffer], irsdk_VarTypeBytes[vHeader.type]);
+							memcpy(&currentType.floatValue, &samples[curPosBuffer], irsdk_VarTypeBytes[vHeader.type]);
 							std::cout << currentType.floatValue << std::endl;
 							break;
 
 						case irsdk_double:
-							std::memcpy(&currentType.doubleValue, &samples[curPosBuffer], irsdk_VarTypeBytes[vHeader.type]);
+							memcpy(&currentType.doubleValue, &samples[curPosBuffer], irsdk_VarTypeBytes[vHeader.type]);
 							std::cout << currentType.doubleValue << std::endl;
 							break;
 						}
