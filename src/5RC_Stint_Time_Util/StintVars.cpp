@@ -4,7 +4,10 @@
 #include <assert.h>
 #include "irsdk_defines.h"
 #include "StintVars.h"
+
+#ifdef _WIN32
 #pragma warning(disable:4996) // CRT_SECURE_NO_WARNINGS
+#endif
 
 int StintVarHeaderData::getStintVarHeaderIdx(std::string var)
 {

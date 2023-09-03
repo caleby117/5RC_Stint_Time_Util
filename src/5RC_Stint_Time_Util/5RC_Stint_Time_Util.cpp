@@ -8,7 +8,9 @@
 #include "StintVars.h"
 
 #define DUMP_TO_STDOUT
+#ifdef _WIN32
 #pragma warning(disable:4996) //_CRT_SECURE_NO_WARNINGS
+#endif
 
 /* 
 	Get relevant telemetry information from IBT file for laptime, fuel consumption, weather, tyre wear. 
