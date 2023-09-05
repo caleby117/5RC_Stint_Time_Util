@@ -5,8 +5,11 @@
 #include "irsdk_defines.h"
 #include "StintVars.h"
 
+#ifdef _WIN32
+#pragma warning(disable:4996) // CRT_SECURE_NO_WARNINGS
+#endif
 
-int StintVarHeaderData::getStintVarHeaderIdx(const char* var)
+int StintVarHeaderData::getStintVarHeaderIdx(std::string var)
 {
 	if (stintVarIndexByName.contains(var))
 	{
@@ -27,7 +30,7 @@ void StintVarHeaderData::registerVars(irsdk_varHeader* vars, int count)
 	for (int i = 0; i < count; i++)
 	{
 		registerVar(vars[i], i, sampleLen);
-		stintVarIndexByName.insert(std::pair<const char*, int>(vars[i].name, i));
+		stintVarIndexByName.insert(std::pair<std::string, int>(vars[i].name, i));
 		sampleLen += irsdk_VarTypeBytes[vars[i].type];
 	}
 
@@ -62,3 +65,7 @@ StintVarHeader& StintVarHeaderData::getStintVarHeader(const char* var)
 
 
 int StintVarHeaderData::getSampleLen() { return sampleLen; }
+
+void StintVarHeaderData::setValidLaps(int laps) { validLaps = laps; }
+
+int StintVarHeaderData::getValidLaps() { return validLaps; }
