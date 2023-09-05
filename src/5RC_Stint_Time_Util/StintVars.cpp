@@ -11,7 +11,7 @@
 
 int StintVarHeaderData::getStintVarHeaderIdx(std::string var)
 {
-	if (stintVarIndexByName.contains(var))
+	if (stintVarIndexByName.find(var) != stintVarIndexByName.end())
 	{
 		return stintVarIndexByName[var];
 	}

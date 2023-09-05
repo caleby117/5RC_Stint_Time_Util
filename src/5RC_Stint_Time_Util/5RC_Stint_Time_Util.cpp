@@ -8,16 +8,20 @@
 #include "StintVars.h"
 
 #define DUMP_TO_STDOUT
+
+// Windows implementations
 #ifdef _WIN32
 #pragma warning(disable:4996) //_CRT_SECURE_NO_WARNINGS
 #define byte std::byte
 #endif
 
-
+// Linux implementations
 #ifdef __linux__
 #include <cstring>
-#endif
-
+#include <wchar.h>
+#include <stdint.h>
+#include <cfloat>
+#endif 
 /* 
 	Get relevant telemetry information from IBT file for laptime, fuel consumption, weather, tyre wear. 
 */
@@ -88,7 +92,7 @@ void ReadFirstSamplesOfLaps(int *firstSamplesOfLaps, irsdk_varHeader &lastLapTim
 	int idx = 0;
 	int len = irsdk_VarTypeBytes[lastLapTime.type];
 	float currLastLapTime;
-	float prevLastLapTime = -INFINITY;
+	float prevLastLapTime = -FLT_MAX;
 
 	// ignore first lap/entry
 	int dataStart = GetDataOffset() + header.bufLen;
@@ -128,7 +132,7 @@ int main(int argc, char** argv)
 	if (argc < 2)
 	{
 		// no args
-		std::cout << "Usage: 5RC_Stint_Time_Util.exe <ibt file path>" << std::endl;
+		std::cout << "Usage: ./5RC_Stint_Time_Util <ibt file path>" << std::endl;
 		return 1;
 	}
 
@@ -206,7 +210,7 @@ int main(int argc, char** argv)
 				int* firstSampleRowOfLap = new int[diskHeader.sessionLapCount];
 				int lastLapTime_i = sVarData.getStintVarHeaderIdx("LapLastLapTime");
 				ReadFirstSamplesOfLaps(firstSampleRowOfLap, irStintVarHeaders[lastLapTime_i], ibt);
-				byte* samples = new byte[diskHeader.sessionLapCount * sVarData.getSampleLen()];
+				uint8_t* samples = new uint8_t[diskHeader.sessionLapCount * sVarData.getSampleLen()];
 
 				// Get the data from the selected samples
 				int start = GetDataOffset();
