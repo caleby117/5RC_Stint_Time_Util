@@ -431,7 +431,7 @@ FodyWeavers.xsd
 *.sln.iml
 
 # Some weird cached form of the cpp file
-*/2
+**/2
 
 # Linux executables
-*/elf/
+**/elf/
