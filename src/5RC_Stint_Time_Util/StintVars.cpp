@@ -9,6 +9,13 @@
 #pragma warning(disable:4996) // CRT_SECURE_NO_WARNINGS
 #endif
 
+StintVarHeaderData::~StintVarHeaderData()
+{
+	// free all allocated memory
+	delete [] stintVarHeaders;
+}
+
+
 int StintVarHeaderData::getStintVarHeaderIdx(std::string var)
 {
 	if (stintVarIndexByName.contains(var))
@@ -18,13 +25,14 @@ int StintVarHeaderData::getStintVarHeaderIdx(std::string var)
 	return -1;
 }
 
-void StintVarHeaderData::registerVars(irsdk_varHeader* vars, int count)
+int StintVarHeaderData::registerVars(irsdk_varHeader* vars, int count)
 {
 	// Overwrites original list of registered vars if any
 	if (stintVarHeaders != NULL) { delete[] stintVarHeaders; }
 	varCount = count;
 	sampleLen = 0;
 	stintVarHeaders = new StintVarHeader[count];
+	stintVarIndexByName.clear();
 
 	// register each var individually
 	for (int i = 0; i < count; i++)
@@ -34,7 +42,7 @@ void StintVarHeaderData::registerVars(irsdk_varHeader* vars, int count)
 		sampleLen += irsdk_VarTypeBytes[vars[i].type];
 	}
 
-
+	return 0;
 }
 
 void StintVarHeaderData::registerVar(irsdk_varHeader& var, int idx, int offset)

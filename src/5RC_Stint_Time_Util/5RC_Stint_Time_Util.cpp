@@ -5,6 +5,7 @@
 #include <unordered_set>
 #include <string>
 #include "irsdk_defines.h"
+#include "DiskServer.h"
 #include "StintVars.h"
 
 #define DUMP_TO_STDOUT
@@ -29,7 +30,7 @@ union irPossibleTypes
 static irsdk_header header;
 static irsdk_diskSubHeader diskHeader;
 
-std::string varStrings[] = {
+const char* varStrings[] = {
 	"SessionTick",
 	"PlayerCarPosition",
 	"PlayerCarClassPosition",
@@ -126,6 +127,33 @@ int main(int argc, char** argv)
 		return 1;
 	}
 
+	DiskServer server = {argv[1]};
+
+	server.registerVars(varStrings, 31);
+	server.readSamplesNewLap();
+	server.writeSamples();
+	std::cout << "samples written" << std::endl;
+
+	// read the samples and see if its correct
+	std::stringstream output;
+	for (int lap = 0; lap < server.getNumberLaps(); lap++)
+	{
+		output << "LAP " << lap << std::endl;
+
+		// iterate through vars
+		for (int i = 0; i < 31; i++)
+		{
+			output << varStrings[i] << ": ";
+			server.readVarSS(output, varStrings[i], lap);
+			output << std::endl;
+		}
+		output << std::endl;
+	}
+	std::cout << output.str();
+
+
+	/*
+
 	// List of variables that we are interested in
 	std::unordered_set<std::string> stintVars = std::unordered_set<std::string>();
 	
@@ -136,7 +164,6 @@ int main(int argc, char** argv)
 	}
 
 	
-
 	// open the file for reading
 	FILE* ibt = fopen(argv[1], "rb");
 	const int stintVarsCount = stintVars.size();
@@ -201,6 +228,8 @@ int main(int argc, char** argv)
 				int lastLapTime_i = sVarData.getStintVarHeaderIdx("LapLastLapTime");
 				ReadFirstSamplesOfLaps(firstSampleRowOfLap, irStintVarHeaders[lastLapTime_i], ibt);
 				std::byte* samples = new std::byte[diskHeader.sessionLapCount * sVarData.getSampleLen()];
+
+				// **TODO**
 
 				// Get the data from the selected samples
 				int start = GetDataOffset();
@@ -296,6 +325,7 @@ int main(int argc, char** argv)
 	}
 
 	delete[] irStintVarHeaders;
+	*/
 
 }
 

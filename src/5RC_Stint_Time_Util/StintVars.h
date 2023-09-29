@@ -19,8 +19,8 @@ struct StintVarHeader
 class StintVarHeaderData
 {
 public:
-
-	void registerVars(irsdk_varHeader* vars, int count);
+	~StintVarHeaderData();
+	int registerVars(irsdk_varHeader* vars, int count);
 	int getStintVarHeaderIdx(std::string var);
 	int getVarCount();
 	StintVarHeader& getStintVarHeader(const char* var);
@@ -30,11 +30,12 @@ public:
 
 protected:
 	void registerVar(irsdk_varHeader& var, int idx, int offset);
-	irsdk_varHeader* irVarHeaderArr;
 	int varCount = 0;
 	int registeredVars = 0;
 	std::unordered_map < std::string, int > stintVarIndexByName;
 	StintVarHeader* stintVarHeaders = NULL;
+
+	// length of one tick of samples that we are interested in
 	size_t sampleLen;
 	int validLaps = -1;
 	

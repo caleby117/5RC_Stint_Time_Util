@@ -433,5 +433,13 @@ FodyWeavers.xsd
 # Some weird cached form of the cpp file
 **/2
 
-# remove linux executables
+# Linux stuff
 **/elf/
+Makefile
+
+
+# vscode information
+**/.vscode/
+
+# .ibt data files
+*.ibt
