@@ -435,3 +435,10 @@ FodyWeavers.xsd
 
 # Linux executables
 **/elf/
+
+
+# vscode information
+**/.vscode/
+
+# .ibt data files
+*.ibt
