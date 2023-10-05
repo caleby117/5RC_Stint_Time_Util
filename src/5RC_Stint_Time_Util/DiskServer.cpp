@@ -7,6 +7,7 @@
 #include <iostream>
 #include <assert.h>
 #include <fstream>
+#include <iomanip>
 
 #ifdef _WIN32
 // windows install
@@ -21,6 +22,13 @@
 
 DiskServer::DiskServer(const char* path)
 {
+
+    // save ibt path and check if it has a .ibt extension
+    ibtPath = std::string(path);
+    if (ibtPath.substr(ibtPath.size()-4) != ".ibt")
+    {
+        throw std::runtime_error("DiskServer: Not a .ibt file");
+    }
     ibtReader.openIbtFile(path);
 
 }
@@ -261,14 +269,14 @@ size_t DiskServer::readVarToStream(std::iostream& stream, irsdk_varHeader& vh, i
         case irsdk_float:
         {
             float valFloat = DataRow::getRow(sampleIdx).readVarAt<float>(vh.offset);
-            stream << valFloat;
+            stream << std::fixed << std::setprecision(3) << valFloat;
             break;
         }
         
         case irsdk_double:
         {
             double valDouble = DataRow::getRow(sampleIdx).readVarAt<double>(vh.offset);
-            stream << valDouble;
+            stream << std::fixed << std::setprecision(3) << valDouble;
             break;
         }
     }
@@ -278,12 +286,15 @@ size_t DiskServer::readVarToStream(std::iostream& stream, irsdk_varHeader& vh, i
 
 size_t DiskServer::writeCSV()
 {
-    return writeCSV("testfile.csv");
+    // write all samples as CSV to the same directory and <filename>.csv
+    std::string csvpath = ibtPath.substr(0, ibtPath.size()-4) + ".csv";
+    return writeCSV(csvpath);
 }
 
 
-size_t DiskServer::writeCSV(const char* path)
+size_t DiskServer::writeCSV(std::string& path)
 {
+    std::cout << "writing csv to path " << path << std::endl;
     // define a fstream
     std::fstream csv {path, std::ios::out};
     int nVars = regVars.numRegisteredVars();

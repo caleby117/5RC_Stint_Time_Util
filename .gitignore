@@ -442,3 +442,6 @@ FodyWeavers.xsd
 
 # .ibt data files
 *.ibt
+
+# csv files
+*.csv

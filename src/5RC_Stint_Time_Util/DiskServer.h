@@ -54,10 +54,14 @@ public:
     size_t readVarToStream(std::iostream& stream, irsdk_varHeader& vh, int sampleIdx);
 
     // output the file into csv
-    size_t writeCSV(const char* path);
+    size_t writeCSV(std::string& path);
     size_t writeCSV();
 
 protected:
+    // file path
+    std::string ibtPath;
+
+
     bool is_init = false;
 
     // clear the samples and lists

@@ -41,6 +41,7 @@ static irsdk_header header;
 static irsdk_diskSubHeader diskHeader;
 
 const char* varStrings[] = {
+	"Lap",
 	"SessionTick",
 	"PlayerCarPosition",
 	"PlayerCarClassPosition",
@@ -49,7 +50,6 @@ const char* varStrings[] = {
 	"PlayerCarMyIncidentCount",
 	"PlayerCarWeightPenalty",
 	"PlayerCarPowerAdjust",
-	"Lap",
 	"LapLastLapTime",
 	"TrackTemp",
 	"TrackTempCrew",
@@ -84,6 +84,7 @@ int main(int argc, char** argv)
 		return 1;
 	}
 
+
 	DiskServer server = {argv[1]};
 
 	server.registerVars(varStrings, 31);
@@ -91,24 +92,8 @@ int main(int argc, char** argv)
 	server.saveSamplesNewLap();
 	std::cout << "samples written" << std::endl;
 
-	// read the samples and see if its correct
-	std::stringstream output;
-	for (int lap = 0; lap < server.getNumberLaps(); lap++)
-	{
-		output << "LAP " << lap << std::endl;
 
-		// iterate through vars
-		for (int i = 0; i < 31; i++)
-		{
-			output << varStrings[i] << ": ";
-			server.readVarToStream(output, varStrings[i], lap);
-			output << std::endl;
-		}
-		output << std::endl;
-	}
-	std::cout << output.str();
-
-	server.writeCSV("test1.csv");
+	server.writeCSV();
 
 }
 
