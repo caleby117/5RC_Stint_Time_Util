@@ -10,28 +10,6 @@
 #ifndef DISKSERVER_H
 #define DISKSERVER_H
 
-class SampleArr
-{
-public:
-    SampleArr();
-    ~SampleArr();
-
-    int size();
-    
-    DataRow* emplaceSample();
-
-    void clear();
-
-    void init(int size);
-
-    DataRow& at(int idx);
-
-private:
-    DataRow* data = NULL;
-    bool isInit = false;
-    int maxsize = 0;
-    int cursize = 0;
-};
 
 class DiskServer
 {
@@ -57,7 +35,7 @@ public:
     int getNumberLaps();
 
     // write samples whose idx in sampleIdxNewLap to datarows
-    void writeSamples();
+    void saveSamplesNewLap();
 
     // read a single variable of a particular sample
     template <typename T>
@@ -70,11 +48,14 @@ public:
         return sample.readVarAt<T>(offset);
     }
 
-    void finalize();
+    // read var into a stream
+    size_t readVarToStream(std::iostream& stream, const char* name, int sampleIdx);
+    size_t readVarToStream(std::iostream& stream, const int varIdx, int sampleIdx);
+    size_t readVarToStream(std::iostream& stream, irsdk_varHeader& vh, int sampleIdx);
 
-    void readVarSS(std::stringstream& stream, const char* name, int sample);
-
-
+    // output the file into csv
+    size_t writeCSV(const char* path);
+    size_t writeCSV();
 
 protected:
     bool is_init = false;

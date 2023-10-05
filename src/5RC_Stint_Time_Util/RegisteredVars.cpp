@@ -63,7 +63,6 @@ int RegisteredVars::findIndex(const char* var)
 
 int RegisteredVars::getOffset(int idx)
 {
-    // TODO
     return registeredVarHeaders[idx].offset;
 }
 
@@ -94,6 +93,12 @@ int RegisteredVars::getNumBytes(const char* var)
 void RegisteredVars::finalize()
 {
     isFinalized = true;
+}
+
+
+const std::vector<irsdk_varHeader>& RegisteredVars::getVars()
+{
+    return registeredVarHeaders;
 }
 
 

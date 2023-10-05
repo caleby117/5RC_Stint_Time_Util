@@ -86,9 +86,6 @@ protected:
     // data start
     int dataStart;
 
-    // operations on variable headers and indexes
-    void clearHeaderLists();
-
 
 };
 

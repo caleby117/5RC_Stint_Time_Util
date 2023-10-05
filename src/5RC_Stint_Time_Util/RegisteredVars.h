@@ -42,6 +42,8 @@ public:
     // finalize registered vars
     void finalize();
 
+    const std::vector<irsdk_varHeader>& getVars();
+
 protected:
     // cached variable headers and indexes
     std::unordered_map<std::string, int> registeredVarIdx = std::unordered_map<std::string, int>();

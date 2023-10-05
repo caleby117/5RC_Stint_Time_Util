@@ -6,6 +6,7 @@
 #include "DiskServer.h"
 #include <iostream>
 #include <assert.h>
+#include <fstream>
 
 #ifdef _WIN32
 // windows install
@@ -155,7 +156,7 @@ int DiskServer::getNumberLaps()
     return sampleIdxNewLap.size();
 }
 
-void DiskServer::writeSamples()
+void DiskServer::saveSamplesNewLap()
 {
     // write the samples ot the datarow
     for (int samplei = 0; samplei < sampleIdxNewLap.size(); samplei++)
@@ -211,12 +212,26 @@ void DiskServer::writeSamples()
 }
 
 
-void DiskServer::readVarSS(std::stringstream& stream, const char* name, int sampleIdx)
+size_t DiskServer::readVarToStream(std::iostream& stream, const char* name, int sampleIdx)
 {
 
     irsdk_varHeader& vh = regVars.getVarHeaderRef(name);
+    return readVarToStream(stream, vh, sampleIdx);
+}
+
+
+size_t DiskServer::readVarToStream(std::iostream& stream, const int varIdx, int sampleIdx)
+{
+    irsdk_varHeader& vh = regVars.getVarHeaderRef(varIdx);
+    return readVarToStream(stream, vh, sampleIdx);
+}
+
+
+size_t DiskServer::readVarToStream(std::iostream& stream, irsdk_varHeader& vh, int sampleIdx)
+{
     int dataRowOffset = vh.offset;
     int type = vh.type;
+    size_t start = stream.tellp();
 
     switch (type)
     {
@@ -257,7 +272,52 @@ void DiskServer::readVarSS(std::stringstream& stream, const char* name, int samp
             break;
         }
     }
+    return (size_t) (stream.tellp()) - start;
 }
+
+
+size_t DiskServer::writeCSV()
+{
+    return writeCSV("testfile.csv");
+}
+
+
+size_t DiskServer::writeCSV(const char* path)
+{
+    // define a fstream
+    std::fstream csv {path, std::ios::out};
+    int nVars = regVars.numRegisteredVars();
+    
+    // write var names
+    for (int i = 0; i < nVars; i++)
+    {
+        // TODO: put each var name into the stream
+        const irsdk_varHeader& vh = regVars.getVarHeaderRef(i);
+        csv << vh.name;
+        if (i == nVars-1) break;
+        csv << ',';
+    }
+    csv << std::endl;
+
+    // write data 
+    for (int samplei = 0; samplei < DataRow::rows.size(); samplei++)
+    {
+        // put each data point into the stream 
+        for (int vari = 0; vari < nVars; vari++)
+        {
+            readVarToStream(csv, vari, samplei);
+            if (vari == nVars-1) break;
+            csv << ',';
+        }
+        csv << std::endl;
+    }
+    
+    size_t fsize = csv.tellp();
+    csv.flush();
+    csv.close();
+    return fsize;
+}
+
 
 void DiskServer::clearHeaderLists()
 {
