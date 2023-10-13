@@ -4,7 +4,7 @@ all: 5RC_Stint_Time_Util clean_o
 
 cc:=g++
 execpath:=./elf/
-sourcefiles:=5RC_Stint_Time_Util.o DiskServer.o RegisteredVars.o IbtHandler.o
+sourcefiles:=5RC_Stint_Time_Util.o DiskServer.o RegisteredVars.o IbtHandler.o ArgParse.o
 
 %.o: %.cpp
 	$(cc) -g -c -std=c++17 $?

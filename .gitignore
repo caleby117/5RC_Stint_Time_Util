@@ -445,3 +445,6 @@ FodyWeavers.xsd
 
 # csv files
 *.csv
+
+# credentials
+*/google_creds.json

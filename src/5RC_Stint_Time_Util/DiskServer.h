@@ -15,7 +15,7 @@ class DiskServer
 {
 public:
     // constructor and destructor
-    DiskServer(const char* path);
+    DiskServer(std::string& path);
     ~DiskServer();
 
 
@@ -27,7 +27,7 @@ public:
     const std::string getSessionString();
 
     // init vars: do the initial processing and search of the vars;
-    int registerVars(const char* vars[], int count);
+    int registerVars(std::vector<std::string>& vars);
 
     // populate sampleIdxNewLap
     int readSamplesNewLap();
@@ -55,7 +55,6 @@ public:
 
     // output the file into csv
     size_t writeCSV(std::string& path);
-    size_t writeCSV();
 
 protected:
     // file path

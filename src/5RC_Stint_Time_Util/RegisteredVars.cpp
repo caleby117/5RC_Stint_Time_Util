@@ -129,7 +129,7 @@ DataRow::~DataRow()
 DataRow::DataRow(DataRow& other)
 {
     // copy constructor
-    std::cout << this << " using copy constructor" << std::endl;
+    //std::cout << this << " using copy constructor" << std::endl;
     isFinal = other.isFinal;
     data = other.data;
 }
@@ -137,7 +137,7 @@ DataRow::DataRow(DataRow& other)
 
 DataRow::DataRow(DataRow&& other)
 {
-    std::cout << this << " using move constructor from "<< &other << std::endl;
+    //std::cout << this << " using move constructor from "<< &other << std::endl;
     isFinal = other.isFinal;
     data = other.data;
 
@@ -149,10 +149,8 @@ DataRow& DataRow::operator=(DataRow&& other)
     if (this != &other)
     {
         delete[] data;
-        std::cout << this << " using overloaded = operator";
         isFinal = other.isFinal;
         data = other.data;
-        std::cout << " data=" << (void*) data << std::endl;
         other.data = nullptr;
     }
     return *this;
@@ -208,9 +206,9 @@ void DataRow::finalizeRow()
         data = nullptr;
     }
     data = new uint8_t[dataSize];
-    std::cout << "DataRow@" << this << ": Finalized size ";
-    std::cout << dataSize;
-    std::cout << ", datae@" << (void*) data << std::endl;
+    //std::cout << "DataRow@" << this << ": Finalized size ";
+    //std::cout << dataSize;
+    //std::cout << ", datae@" << (void*) data << std::endl;
 }
 
 void DataRow::pushSizes(int size)

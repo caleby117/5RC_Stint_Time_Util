@@ -7,6 +7,7 @@
 #include "irsdk_defines.h"
 #include "DiskServer.h"
 #include "StintVars.h"
+#include "ArgParse.h"
 
 #define DUMP_TO_STDOUT
 
@@ -24,76 +25,47 @@
 #include <cfloat>
 #endif 
 /* 
-	Get relevant telemetry information from IBT file for laptime, fuel consumption, weather, tyre wear. 
+    Get relevant telemetry information from IBT file for laptime, fuel consumption, weather, tyre wear. 
 */
 
 union irPossibleTypes
 {
-	char charValue;
+    char charValue;
 
-	int intValue;
-	float floatValue;
+    int intValue;
+    float floatValue;
 
-	double doubleValue;
+    double doubleValue;
 };
 
 static irsdk_header header;
 static irsdk_diskSubHeader diskHeader;
 
-const char* varStrings[] = {
-	"Lap",
-	"SessionTick",
-	"PlayerCarPosition",
-	"PlayerCarClassPosition",
-	"PlayerCarClass",
-	"PlayerCarTeamIncidentCount",
-	"PlayerCarMyIncidentCount",
-	"PlayerCarWeightPenalty",
-	"PlayerCarPowerAdjust",
-	"LapLastLapTime",
-	"TrackTemp",
-	"TrackTempCrew",
-	"AirTemp",
-	"WeatherType",
-	"Skies",
-	"AirDensity",
-	"AirPressure",
-	"WindVel",
-	"FuelLevelPct",
-	"LFwearL",
-	"LFwearM",
-	"LFwearR",
-	"RFwearL",
-	"RFwearM",
-	"RFwearR",
-	"LRwearL",
-	"LRwearM",
-	"LRwearR",
-	"RRwearL",
-	"RRwearM",
-	"RRwearR"
-	};
-
-
 int main(int argc, char** argv)
 {
-	if (argc < 2)
-	{
-		// no args
-		std::cout << "Usage: ./5RC_Stint_Time_Util <ibt file path>" << std::endl;
-		return 1;
-	}
+    // parse command line arguments
+    ArgParser::getInstance().parseArgs(argc, argv);
+    if (ArgParser::getInstance().hasError())
+    {
+        // print help message
+        std::cout << ArgParser::getInstance().help;
+        // stop execution
+        return 1;
+    }
+
+    std::string& ibtPath = ArgParser::getInstance().getIbtPath();
+    std::string& outputPath = ArgParser::getInstance().getOutputPath();
+    std::vector<std::string>& varList = ArgParser::getInstance().getVarList();
+
+    DiskServer server = {ibtPath};
+
+    server.registerVars(varList);
+    server.readSamplesNewLap();         // saves the sample index of new laps
+    server.saveSamplesNewLap();         // saves the samples themselves
+    std::cout << "samples written" << std::endl;
 
 
-	DiskServer server = {argv[1]};
-
-	server.registerVars(varStrings, 31);
-	server.readSamplesNewLap();
-	server.saveSamplesNewLap();
-	std::cout << "samples written" << std::endl;
-
-
-	server.writeCSV();
+    server.writeCSV(outputPath);
 
 }
 
