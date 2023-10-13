@@ -20,16 +20,16 @@
 #endif
 
 
-DiskServer::DiskServer(const char* path)
+DiskServer::DiskServer(std::string& ibtPath)
 {
 
     // save ibt path and check if it has a .ibt extension
-    ibtPath = std::string(path);
     if (ibtPath.substr(ibtPath.size()-4) != ".ibt")
     {
         throw std::runtime_error("DiskServer: Not a .ibt file");
     }
-    ibtReader.openIbtFile(path);
+    ibtReader.openIbtFile(ibtPath.c_str());
+    this->ibtPath = ibtPath;
 
 }
 
@@ -53,19 +53,16 @@ const std::string DiskServer::getSessionString()
 }
 
 
-int DiskServer::registerVars(const char* vars[], int count)
+int DiskServer::registerVars(std::vector<std::string>& vars)
 {
 
+    int count = vars.size();
     clearHeaderLists();
     initHeaderLists(count);
     DataRow::init(regVars.numRegisteredVars());
 
     // init vars
-    std::unordered_set<std::string> stintVars = std::unordered_set<std::string>();
-    for (int i = 0; i < count; i++)
-    {
-        stintVars.insert(vars[i]);
-    }
+    std::unordered_set<std::string> stintVars (vars.begin(), vars.end());
 
     irsdk_varHeader curVar;
     for (int i = 0; i < ibtReader.getHeaderRef().numVars; i++)
@@ -73,7 +70,7 @@ int DiskServer::registerVars(const char* vars[], int count)
         ibtReader.readVarHeaderInto(&curVar, i);
         if (stintVars.find(curVar.name) != stintVars.end())
         {
-            std::cout << "Registering var " << curVar.name << std::endl;
+            //std::cout << "Registering var " << curVar.name << std::endl;
             // we're interested in this var
             regVars.registerVar(curVar);
 
@@ -90,6 +87,9 @@ int DiskServer::registerVars(const char* vars[], int count)
 
 int DiskServer::readSamplesNewLap()
 {
+    // tell the user that the program is reading the telemetry file
+    std::cout << "Getting stint data from " << ibtPath << std::endl;
+
     // get index of lap number and last lap time
     int lapIdx = regVars.findIndex("Lap");
     int lastLapTimeIdx = regVars.findIndex("LapLastLapTime");
@@ -150,7 +150,7 @@ int DiskServer::readSamplesNewLap()
                 // pick the first sample of the new lap according to LapNum
                 sampleIdxNewLap.push_back(i-(2*ibtReader.getHeaderRef().tickRate));
             }
-            std::cout << "Found new lap " << curLapNum << std::endl;
+            //std::cout << "Found new lap " << curLapNum << std::endl;
         }
         prevLapNum = curLapNum;
     }
@@ -281,14 +281,6 @@ size_t DiskServer::readVarToStream(std::iostream& stream, irsdk_varHeader& vh, i
         }
     }
     return (size_t) (stream.tellp()) - start;
-}
-
-
-size_t DiskServer::writeCSV()
-{
-    // write all samples as CSV to the same directory and <filename>.csv
-    std::string csvpath = ibtPath.substr(0, ibtPath.size()-4) + ".csv";
-    return writeCSV(csvpath);
 }
 
 
