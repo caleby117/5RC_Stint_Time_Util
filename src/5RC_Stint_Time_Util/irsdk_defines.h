@@ -91,6 +91,7 @@ static const _TCHAR IRSDK_BROADCASTMSGNAME[]   = _T("IRSDK_BROADCASTMSG");
 
 #ifdef __linux__
 #include <cstring>
+#include <time.h>
 #endif
 
 

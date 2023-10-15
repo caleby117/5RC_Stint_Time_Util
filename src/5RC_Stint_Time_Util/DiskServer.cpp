@@ -1,7 +1,6 @@
 #include <unordered_map>
 #include <unordered_set>
 #include "irsdk_defines.h"
-#include "StintVars.h"
 #include <stdint.h>
 #include "DiskServer.h"
 #include <iostream>
