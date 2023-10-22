@@ -1,10 +1,10 @@
 #pragma once 
 
 #include "irsdk_defines.h"
-#include "StintVars.h"
 #include <string>
 #include <vector>
 #include <unordered_map>
+#include <stdexcept>
 
 #ifndef IBTHANDLER_H
 #define IBTHANDLER_H

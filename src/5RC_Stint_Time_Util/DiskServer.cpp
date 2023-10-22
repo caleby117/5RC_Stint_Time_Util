@@ -42,12 +42,14 @@ irsdk_header DiskServer::getHeader()
 
 irsdk_diskSubHeader DiskServer::getDiskHeader()
 {
+    std::cout << "Got Disk Header\n";
     return ibtReader.getDiskHeader();
 }
 
 
 const std::string DiskServer::getSessionString()
 {
+    std::cout << "Got Session String\n";
     return ibtReader.getSessionString();
 }
 
@@ -136,6 +138,7 @@ int DiskServer::readSamplesNewLap()
                 curLastLapTime = ibtReader.readVar<float>(fLastLapTimeOffset, i);
                 if (curLastLapTime!=prevLastLapTime)
                 {
+                    std::cout << "Found Lap " << curLapNum << std::endl;
                     // save the sample index
                     sampleIdxNewLap.push_back(i);
                     identicalLapTimes = false;
@@ -288,12 +291,19 @@ size_t DiskServer::writeCSV(std::string& path)
     std::cout << "writing csv to path " << path << std::endl;
     // define a fstream
     std::fstream csv {path, std::ios::out};
+
+    if (!csv)
+    {
+      //csv failed to open
+      std::cerr << "CSVfile at " << path<< " failed to open" <<std::endl;
+      return 0;
+    }
+
     int nVars = regVars.numRegisteredVars();
     
     // write var names
     for (int i = 0; i < nVars; i++)
     {
-        // TODO: put each var name into the stream
         const irsdk_varHeader& vh = regVars.getVarHeaderRef(i);
         csv << vh.name;
         if (i == nVars-1) break;

@@ -6,7 +6,6 @@
 #include <string>
 #include "irsdk_defines.h"
 #include "DiskServer.h"
-#include "StintVars.h"
 #include "ArgParse.h"
 
 #define DUMP_TO_STDOUT
@@ -27,17 +26,6 @@
 /* 
     Get relevant telemetry information from IBT file for laptime, fuel consumption, weather, tyre wear. 
 */
-
-union irPossibleTypes
-{
-    char charValue;
-
-    int intValue;
-    float floatValue;
-
-    double doubleValue;
-};
-
 static irsdk_header header;
 static irsdk_diskSubHeader diskHeader;
 

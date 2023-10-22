@@ -1,3 +1,4 @@
+#include <stdexcept>
 #include <string>
 #include <iostream>
 #include <vector>
@@ -20,7 +21,7 @@ void ArgParser::parseArgs(const int argc, char** argv)
     for (int i = 1; i < argc; i++)
     {
         const char* arg = argv[i];
-        //std::cout << "Parsing arg " << arg << std::endl;
+        std::cout << "Parsing arg " << arg << std::endl;
         if (argv[i][0] == '-')
         {
             // check if it is a valid arg
@@ -78,7 +79,10 @@ void ArgParser::parseArgs(const int argc, char** argv)
     }
 
     // set default value of output
-    argvals["-o"] = std::move(argvals["ibtFilePath"].substr(0, argvals["ibtFilePath"].size()-4) + ".csv");
+    if (argvals.find("o") == argvals.end())
+    {
+        argvals["-o"] = std::move(argvals["ibtFilePath"].substr(0, argvals["ibtFilePath"].size()-4) + ".csv");
+    }
 }
 
 bool ArgParser::hasError()
@@ -103,11 +107,16 @@ std::vector<std::string>& ArgParser::getVarList()
 
 void ArgParser::splitVars(std::string& varPath)
 {
+    std::cout << "splitting vars" << std::endl;
     std::ifstream varfile(varPath);
-    std::string var;
-    while (!varfile.eof())
+    if (!varfile)
     {
-        varfile >> var;
+        std::cout << "ArgParser::splitVars: Failed to open file " << varPath <<std::endl;
+        throw std::runtime_error("Could not open vars file\n");
+    }
+    for (std::string var; varfile >> var;)
+    {
+        std::cout << var << std::endl;
         vars.push_back(var);
     }
 }

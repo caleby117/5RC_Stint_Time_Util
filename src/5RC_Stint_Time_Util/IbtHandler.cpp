@@ -6,7 +6,6 @@
 #include <sstream>
 #include <unordered_set>
 #include "irsdk_defines.h"
-#include "StintVars.h"
 #include "IbtHandler.h"
 #include "RegisteredVars.h"
 
@@ -69,6 +68,7 @@ void IbtHandler::openIbtFile(const char* path)
     }
 
     // read session string
+    /*
     sessionString = new char[fileHeader.sessionInfoLen+1];
     if (fileHeader.sessionInfoLen != fileReadAt(sessionString, 1, fileHeader.sessionInfoLen, fileHeader.sessionInfoOffset))
     {
@@ -78,6 +78,7 @@ void IbtHandler::openIbtFile(const char* path)
         throw std::runtime_error(errors.str());
     }
     sessionString[fileHeader.sessionInfoLen] = '\0';
+    */
 
     // reset the file position for next operations
     resetFilePos();
@@ -109,6 +110,7 @@ void IbtHandler::openIbtFile(const char* path)
         throw std::runtime_error(errors.str());
     }
     DataRow::setInit(false);
+    std::cout << "Successfully read .ibt file" << std::endl;
 
 }
 

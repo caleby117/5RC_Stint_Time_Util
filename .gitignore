@@ -448,3 +448,9 @@ FodyWeavers.xsd
 
 # credentials
 */google_creds.json
+
+#Telemetry
+**/telem
+
+# scratch files
+**/scratch.cpp
