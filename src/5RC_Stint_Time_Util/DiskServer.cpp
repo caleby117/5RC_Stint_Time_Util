@@ -111,14 +111,14 @@ int DiskServer::readSamplesNewLap()
     // Look at the next 2 seconds worth of samples and see if
     // LapLastLapTime has been updated
     // Store the index of the sample
-    int curLapNum;
+    int curLapNum = 0;
     int prevLapNum = -1;
     float curLastLapTime = 0;
     float prevLastLapTime = 0;
     for (int i = 1; i < ibtReader.getDiskHeaderRef().sessionRecordCount; i++)
     {
         curLapNum = ibtReader.readVar<int>(fLapOffset, i);
-        if (prevLapNum < 0) prevLapNum = curLapNum;
+        //if (prevLapNum < 0) prevLapNum = curLapNum;
         
         // check if we have crossed the start/finish and have started a new lap
         if (curLapNum != prevLapNum)
@@ -126,19 +126,18 @@ int DiskServer::readSamplesNewLap()
             bool identicalLapTimes = true;
             // new lap. search the next 2 seconds worth of samples for the new time
             int endSample = i+(2*ibtReader.getHeaderRef().tickRate);
+            if (ibtReader.getDiskHeaderRef().sessionRecordCount < endSample)
+            {
+                endSample = ibtReader.getDiskHeaderRef().sessionRecordCount;
+            }
             for (;i<endSample;i++)
             {
-                if (i >= ibtReader.getDiskHeaderRef().sessionRecordCount)
-                {
-                    identicalLapTimes = false;
-                    break;
-                }
                 prevLastLapTime = curLastLapTime;
                 // find the first sample that has the updated curLastLapTime
                 curLastLapTime = ibtReader.readVar<float>(fLastLapTimeOffset, i);
                 if (curLastLapTime!=prevLastLapTime)
                 {
-                    std::cout << "Found Lap " << curLapNum << std::endl;
+                    //std::cout << "Found Lap " << curLapNum << std::endl;
                     // save the sample index
                     sampleIdxNewLap.push_back(i);
                     identicalLapTimes = false;

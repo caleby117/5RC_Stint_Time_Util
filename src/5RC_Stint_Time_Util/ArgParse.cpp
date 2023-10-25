@@ -21,7 +21,7 @@ void ArgParser::parseArgs(const int argc, char** argv)
     for (int i = 1; i < argc; i++)
     {
         const char* arg = argv[i];
-        std::cout << "Parsing arg " << arg << std::endl;
+        //std::cout << "Parsing arg " << arg << std::endl;
         if (argv[i][0] == '-')
         {
             // check if it is a valid arg
@@ -51,7 +51,7 @@ void ArgParser::parseArgs(const int argc, char** argv)
 
             // consume the next argv
             argvals[arg] = argv[++i];
-            std::cout << "Arg " << arg << " with value of " << argvals[arg] << std::endl;
+            //std::cout << "Arg " << arg << " with value of " << argvals[arg] << std::endl;
             continue;
         }
         else if (hasIbtFileName)
@@ -79,7 +79,7 @@ void ArgParser::parseArgs(const int argc, char** argv)
     }
 
     // set default value of output
-    if (argvals.find("o") == argvals.end())
+    if (argvals["-o"] == "")
     {
         argvals["-o"] = std::move(argvals["ibtFilePath"].substr(0, argvals["ibtFilePath"].size()-4) + ".csv");
     }
@@ -107,7 +107,7 @@ std::vector<std::string>& ArgParser::getVarList()
 
 void ArgParser::splitVars(std::string& varPath)
 {
-    std::cout << "splitting vars" << std::endl;
+    //std::cout << "splitting vars" << std::endl;
     std::ifstream varfile(varPath);
     if (!varfile)
     {
@@ -116,7 +116,7 @@ void ArgParser::splitVars(std::string& varPath)
     }
     for (std::string var; varfile >> var;)
     {
-        std::cout << var << std::endl;
+        //std::cout << var << std::endl;
         vars.push_back(var);
     }
 }

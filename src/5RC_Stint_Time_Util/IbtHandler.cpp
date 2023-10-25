@@ -110,7 +110,7 @@ void IbtHandler::openIbtFile(const char* path)
         throw std::runtime_error(errors.str());
     }
     DataRow::setInit(false);
-    std::cout << "Successfully read .ibt file" << std::endl;
+    std::cout << "Read " << path << " successful."<< std::endl;
 
 }
 

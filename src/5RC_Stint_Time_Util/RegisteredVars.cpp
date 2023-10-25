@@ -37,7 +37,7 @@ void RegisteredVars::registerVar(irsdk_varHeader varHeader)
     varHeader.offset = DataRow::getDataSize();
     DataRow::pushSizes(irsdk_VarTypeBytes[varHeader.type]);
     registeredVarHeaders.push_back(varHeader);
-    std::cout << "Registered var " << varHeader.name << std::endl;
+    //std::cout << "Registered var " << varHeader.name << std::endl;
 }
 
 int RegisteredVars::numRegisteredVars()
